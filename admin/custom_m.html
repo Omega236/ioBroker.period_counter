@@ -1,23 +1,88 @@
 <script type="text/x-iobroker" data-template-name="period_counter">
 	<div class="row">
 		<div class="col s2">
-			<input type="checkbox" data-field="enabled" data-default="false"/>
-			<!-- this field is mandatory, just to find out if to include this settings or not</span-->
+			<input type="checkbox" data-field="enabled"/>
 			<span class="translate">enabled</span>
-		</div>
-		<div class="col s4">
-			<input type="text" data-field="interval" size="30">
-			<span class="translate">period of time</span>
-		</div>
-		<div class="col s4">
-			<input type="text" data-field="state" size="30">
-			<span class="translate">new state</span>
-		</div>
+    </div>
+    <div class="input-field col s6">
+      <input placeholder="Leave empty to use object's name" type="text" data-field="alias" />
+			<span class="translate">alias</span>
+    </div>
+    <div class="input-field col s2">
+      <input placeholder="Leave empty to use object's unit" type="text" data-field="output_unit" />
+			<span class="translate">output unit</span>
+    </div>
 		<div class="col s2">
-			<input type="checkbox" data-field="setAck" data-default="false">
-			<span class="translate">ack</span>
+      <input data-field="output_multiplier" type="number" data-default="1" />
+			<span class="translate">output Multiplier</span>
 		</div>
-	</div>
+		
+  </div>
+  <p class="center translate title">Detailed History</p>
+  <div class="row">
+		<div class="col s3">
+			<input type="checkbox" data-field="detailed_days"/>
+			<span class="translate">Create Datapoint for Every Day </span>
+    </div>
+    <div class="col s3">
+			<input type="checkbox" data-field="detailed_weeks"/>
+			<span class="translate">Create Datapoint for Every week</span>
+    </div>
+		<div class="col s3">
+			<input type="checkbox" data-field="detailed_months"/>
+			<span class="translate">Create Datapoint for Every  month</span>
+    </div>
+		<div class="col s3">
+			<input type="checkbox" data-field="detailed_years"/>
+			<span class="translate">Create Datapoint for Every  year</span>
+    </div>
+
+  </div>
+  <p class="center translate title">Before Data</p>
+  <div class="row">
+		<div class="col s3">
+			<input type="number" data-field="before_days"/>
+			<span class="translate">Create Datapoints for before Day</span>
+    </div>
+    <div class="col s3">
+			<input type="number" data-field="before_weeks"/>
+			<span class="translate">Create Datapoints for before week</span>
+    </div>
+		<div class="col s3">
+			<input type="number" data-field="before_months"/>
+			<span class="translate">Create Datapoints for before month</span>
+    </div>
+		<div class="col s3">
+			<input type="number" data-field="before_years"/>
+			<span class="translate">Create Datapoints for before year</span>
+    </div>
+
+  </div>
+
+  <p class="center translate title">start values</p>
+  <div class="row">
+		<div class="col s3">
+			<input type="number" data-field="start_day"/>
+			<span class="translate">value at year day</span>
+    </div>
+    <div class="col s3">
+			<input type="number" data-field="start_week"/>
+			<span class="translate">value at year week</span>
+    </div>
+		<div class="col s3">
+			<input type="number" data-field="start_month"/>
+			<span class="translate">value at year month</span>
+    </div>
+		<div class="col s3">
+			<input type="number" data-field="start_year"/>
+			<span class="translate">value at year start</span>
+    </div>
+
+  </div>
+
+  <p class="center translate title">Read Data from History</p>
+
+
 </script>
 
 <script type="text/javascript">
@@ -34,10 +99,22 @@
 	if (typeof defaults !== 'undefined') {
 		defaults["period_counter"] = function (obj, instanceObj) {
 			return {
-				enabled:        false,
-				interval:       '5m',
-				state:          false,
-				setAck:         false
+        enabled:        false		,
+        alias:          null,
+        output_unit:    null,
+        output_multiplier:1,
+        detailed_days:true,
+        detailed_weeks:true,
+        detailed_months:true,
+        detailed_years:true,
+        before_days:1,
+        before_weeks:1,
+        before_months:1,
+        before_years:1,
+        start_day:0,
+        start_week:0,
+        start_month:0,
+        start_year:0
 			};
 		}
 	}

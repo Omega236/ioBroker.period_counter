@@ -18,7 +18,8 @@
     "url": "https://github.com/Omega236/ioBroker.period_counter"
   },
   "dependencies": {
-    "@iobroker/adapter-core": "^2.4.0"
+    "@iobroker/adapter-core": "^2.4.0",
+    "node-cron": "^2.0.3"
   },
   "devDependencies": {
     "@iobroker/testing": "^2.3.0",
