@@ -1,79 +1,87 @@
 {
-	"common": {
-		"name": "period_counter",
-		"version": "0.0.1",
-		"news": {
-			"0.0.1": {
-				"en": "initial release",
-				"de": "Erstveröffentlichung",
-				"ru": "Начальная версия",
-				"pt": "lançamento inicial",
-				"nl": "Eerste uitgave",
-				"fr": "Première version",
-				"it": "Versione iniziale",
-				"es": "Versión inicial",
-				"pl": "Pierwsze wydanie",
-				"zh-cn": "首次出版"
-			}
-		},
-		"title": "Period Counter",
-		"titleLang": {
-			"en": "Period Counter",
-			"de": "Periodenzähler",
-			"ru": "Счетчик периода",
-			"pt": "Contador de Período",
-			"nl": "Periode teller",
-			"fr": "Compteur de période",
-			"it": "Contatore del periodo",
-			"es": "Contador de períodos",
-			"pl": "Licznik okresów",
-			"zh-cn": "期间计数器"
-		},
-		"desc": {
-			"en": "Counters are monitored for changes within time periods (days, weeks, months, years)",
-			"de": "Die Zähler werden innerhalb von Zeiträumen (Tage, Wochen, Monate, Jahre) auf Änderungen überwacht.",
-			"ru": "Счетчики отслеживаются на предмет изменений во временных периодах (дни, недели, месяцы, годы)",
-			"pt": "Os contadores são monitorados para mudanças dentro de períodos de tempo (dias, semanas, meses, anos)",
-			"nl": "Tellers worden gecontroleerd op veranderingen binnen tijdsperioden (dagen, weken, maanden, jaren)",
-			"fr": "Les compteurs sont surveillés pour les changements dans les périodes de temps (jours, semaines, mois, années)",
-			"it": "I contatori vengono monitorati per le modifiche all'interno di periodi di tempo (giorni, settimane, mesi, anni)",
-			"es": "Los contadores se controlan para detectar cambios dentro de períodos de tiempo (días, semanas, meses, años)",
-			"pl": "Liczniki są monitorowane pod kątem zmian w okresach czasu (dni, tygodnie, miesiące, lata)",
-			"zh-cn": "监视计数器在一段时间（天，周，月，年）内的变化"
-		},
-		"authors": [
-			"Omega236 <general.of.omega@googlemail.com>"
-		],
-		"keywords": [
-			"counters",
-			"dataanalyse",
-			"history"
-		],
-		"license": "MIT",
-		"platform": "Javascript/Node.js",
-		"main": "main.js",
-		"icon": "period_counter.png",
-		"enabled": true,
-		"extIcon": "https://raw.githubusercontent.com/Omega236/ioBroker.period_counter/master/admin/period_counter.png",
-		"readme": "https://github.com/Omega236/ioBroker.period_counter/blob/master/README.md",
-		"loglevel": "info",
-		"mode": "daemon",
-		"type": "utility",
-		"compact": true,
-		"connectionType": "local",
-		"dataSource": "poll",
-		"materialize": true,
-		"supportCustoms": true,
-		"dependencies": [
-			{
-				"js-controller": ">=1.4.2"
-			}
-		]
-	},
-	"native": {
-		"option1": true,
-		"option2": "42"
-	},
-	"objects": [],
-	"instanceObjects": []
+  "common": {
+    "name": "period_counter",
+    "version": "0.0.1",
+    "news": {
+      "0.0.1": {
+        "en": "initial release",
+        "de": "Erstveröffentlichung",
+        "ru": "Начальная версия",
+        "pt": "lançamento inicial",
+        "nl": "Eerste uitgave",
+        "fr": "Première version",
+        "it": "Versione iniziale",
+        "es": "Versión inicial",
+        "pl": "Pierwsze wydanie",
+        "zh-cn": "首次出版"
+      }
+    },
+    "title": "Period Counter",
+    "titleLang": {
+      "en": "Period Counter",
+      "de": "Periodenzähler",
+      "ru": "Счетчик периода",
+      "pt": "Contador de Período",
+      "nl": "Periode teller",
+      "fr": "Compteur de période",
+      "it": "Contatore del periodo",
+      "es": "Contador de períodos",
+      "pl": "Licznik okresów",
+      "zh-cn": "期间计数器"
+    },
+    "desc": {
+      "en": "Counters are monitored for changes within time periods (days, weeks, months, years)",
+      "de": "Die Zähler werden innerhalb von Zeiträumen (Tage, Wochen, Monate, Jahre) auf Änderungen überwacht.",
+      "ru": "Счетчики отслеживаются на предмет изменений во временных периодах (дни, недели, месяцы, годы)",
+      "pt": "Os contadores são monitorados para mudanças dentro de períodos de tempo (dias, semanas, meses, anos)",
+      "nl": "Tellers worden gecontroleerd op veranderingen binnen tijdsperioden (dagen, weken, maanden, jaren)",
+      "fr": "Les compteurs sont surveillés pour les changements dans les périodes de temps (jours, semaines, mois, années)",
+      "it": "I contatori vengono monitorati per le modifiche all'interno di periodi di tempo (giorni, settimane, mesi, anni)",
+      "es": "Los contadores se controlan para detectar cambios dentro de períodos de tiempo (días, semanas, meses, años)",
+      "pl": "Liczniki są monitorowane pod kątem zmian w okresach czasu (dni, tygodnie, miesiące, lata)",
+      "zh-cn": "监视计数器在一段时间（天，周，月，年）内的变化"
+    },
+    "authors": [
+      "Omega236 <general.of.omega@googlemail.com>"
+    ],
+    "keywords": [
+      "counters",
+      "dataanalyse",
+      "history"
+    ],
+    "license": "MIT",
+    "platform": "Javascript/Node.js",
+    "main": "main.js",
+    "icon": "period_counter.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/Omega236/ioBroker.period_counter/master/admin/period_counter.png",
+    "readme": "https://github.com/Omega236/ioBroker.period_counter/blob/master/README.md",
+    "loglevel": "info",
+    "mode": "daemon",
+    "type": "utility",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "materialize": true,
+    "supportCustoms": true,
+    "dependencies": [
+      {
+        "js-controller": ">=1.4.2"
+      }
+    ]
+  },
+  "native": {
+    "generateDPDays": 30,
+    "option2": "42",
+    "detailed_days": false,
+    "detailed_weeks": true,
+    "detailed_months": true,
+    "detailed_years": true,
+    "before_days": 3,
+    "before_weeks": 3,
+    "before_months": 3,
+    "before_years": 3
+  },
+  "objects": [],
+  "instanceObjects": []
 }

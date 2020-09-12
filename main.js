@@ -18,9 +18,9 @@ const ObjectSettings = require('./ObjectSettings.js')
 
 class PeriodCounter extends utils.Adapter {
 
-	/**
-	 * @param {Partial<utils.AdapterOptions>} [options={}]
-	 */
+  /**
+   * @param {Partial<utils.AdapterOptions>} [options={}]
+   */
   constructor(options) {
     super({
       ...options,
@@ -33,9 +33,9 @@ class PeriodCounter extends utils.Adapter {
     this.on("unload", this.onUnload.bind(this));
   }
 
-	/**
-	 * Is called when databases are connected and adapter received configuration.
-	 */
+  /**
+   * Is called when databases are connected and adapter received configuration.
+   */
   async onReady() {
 
     await this.initialObjects()
@@ -56,7 +56,7 @@ class PeriodCounter extends utils.Adapter {
         //start_day
         this.log.info(oneOD + " Mitternacht setze start_day auf  " + oS.lastGoodValue)
         oS.start_day = oS.lastGoodValue
-        await this._SET_updateObjectCustomData(oS.id, { start_day: oS.start_day })
+        await this._SET_startValue(oS, "day", oS.start_day)
 
         //#####
         //reset week
@@ -65,10 +65,10 @@ class PeriodCounter extends utils.Adapter {
           this.log.info(oneOD + " Wochenbeginn setze before ")
           await this._fillStateBefore(oS, "Week", oS.before_weeks)
 
-          //start_day setzen
+          //start_week setzen
           this.log.info(oneOD + " Wochenbeginn setze start_week auf  " + oS.lastGoodValue)
           oS.start_week = oS.lastGoodValue
-          await this._SET_updateObjectCustomData(oS.id, { start_week: oS.start_week })
+          await this._SET_startValue(oS, "week", oS.start_week)
 
         }
         //#####
@@ -78,10 +78,10 @@ class PeriodCounter extends utils.Adapter {
           this.log.info(oneOD + " Monatsbeginn setze before ")
           await this._fillStateBefore(oS, "Month", oS.before_months)
 
-          //start_day setzen
+          //start_month setzen
           this.log.info(oneOD + " Monatsbeginn setze start_month auf  " + oS.lastGoodValue)
           oS.start_month = oS.lastGoodValue
-          await this._SET_updateObjectCustomData(oS.id, { start_month: oS.start_month })
+          await this._SET_startValue(oS, "month", oS.start_month)
 
         }
         //#####
@@ -91,10 +91,10 @@ class PeriodCounter extends utils.Adapter {
           this.log.info(oneOD + " Jahresbeginn setze before ")
           await this._fillStateBefore(oS, "Year", oS.before_years)
 
-          //start_day setzen
+          //start_year setzen
           this.log.info(oneOD + " Monatsbeginn setze start_Year auf  " + oS.lastGoodValue)
           oS.start_year = oS.lastGoodValue
-          await this._SET_updateObjectCustomData(oS.id, { start_year: oS.start_year })
+          await this._SET_startValue(oS, "year", oS.start_year)
 
         }
 
@@ -126,12 +126,43 @@ class PeriodCounter extends utils.Adapter {
     * @param {ioBroker.State | null | undefined} state
     */
   async onStateChange(id, state) {
-    if (state && this.initialfinished) {
+    if (state) {
+      if (id.startsWith(this.namespace)) {
+        let idsplit = id.split(".")
+        let idcounter = idsplit.slice(0, 3).join(".") + "._counterID"
+        let idoS = await this.getStateAsync(idcounter)
+        if (idoS) {
+          let oS = this.dicDatas[idoS.val]
+          if (oS) {
+            let variable = idsplit.pop()
+            if (variable == "start_day") {
+              oS.start_day = state.val
+            }
+            else if (variable == "start_week") {
+              oS.start_week = state.val
+            }
+            else if (variable == "start_month") {
+              oS.start_month = state.val
+            }
+            else if (variable == "start_year") {
+              oS.start_year = state.val
+            }
+            let valadsaf = await this.getForeignStateAsync(oS.id)
+            if (valadsaf)
+              await this._fillCurrentValues(oS, new Date(), valadsaf.val)
+      
+          }
+        }
 
-      await this._fillCurrentValues(this.dicDatas[id], new Date(state.ts), Number(state.val))
+      }
+      else if (this.initialfinished) {
 
-      this.log.info(id + ' state changed')
+        await this._fillCurrentValues(this.dicDatas[id], new Date(state.ts), Number(state.val))
+
+        //this.log.debug(id + ' state changed')
+      }
     }
+
   }
 
   /**
@@ -164,11 +195,11 @@ class PeriodCounter extends utils.Adapter {
     for (iBeforeCount = beforeCount; iBeforeCount > 1; iBeforeCount--) {
       let theValBefore = await this.getStateAsync(oS.alias + "." + beforetype + "sBefore.Before_" + this.pad(iBeforeCount - 1, 2))
       if (theValBefore) {
-        await this.setStateAsync(oS.alias + "." + beforetype + "Before.Before_" + this.pad(iBeforeCount, 2), Number(theValBefore.val), true)
+        await this.setStateAsync(oS.alias + "." + beforetype + "sBefore.Before_" + this.pad(iBeforeCount, 2), Number(theValBefore.val), true)
       }
     }
     if (iBeforeCount == 1) {
-      await this.setStateAsync(oS.alias + "." + beforetype + "Before.Before_" + this.pad(iBeforeCount, 2), oS.lastGoodValue, true)
+      await this.setStateAsync(oS.alias + "." + beforetype + "sBefore.Before_" + this.pad(iBeforeCount, 2), oS.lastGoodValue, true)
     }
   }
 
@@ -210,24 +241,13 @@ class PeriodCounter extends utils.Adapter {
       this.log.warn(oS.id + " wurde scheinbar resetet! Reset von " + oS.lastGoodValue + " nach " + current_value + " passe alle Startwerte an")
 
       oS.start_day -= theAnpassung
+      await this._SET_startValue(oS, "day", oS.start_day)
       oS.start_week -= theAnpassung
+      await this._SET_startValue(oS, "week", oS.start_week)
       oS.start_month -= theAnpassung
+      await this._SET_startValue(oS, "month", oS.start_month)
       oS.start_year -= theAnpassung
-
-      // Prepare custom object and store correct values
-      const obj = {};
-      obj.common = {};
-      obj.common.custom = {};
-      obj.common.custom[this.namespace] = {
-        start_day: oS.start_day,
-        start_week: oS.start_week,
-        start_month: oS.start_month,
-        start_year: oS.start_year
-      }
-      this.unsubscribeForeignObjects('*')
-      await this.extendForeignObject(oS.id, obj);
-      this.subscribeForeignObjects('*')
-
+      await this._SET_startValue(oS, "year", oS.start_year)
 
     }
 
@@ -264,7 +284,7 @@ class PeriodCounter extends utils.Adapter {
 */
   async _Update_DayState(oS, date, Value) {
     if (oS.detailed_days) {
-      await this.setStateAsync(oS.alias + "." + date.getFullYear() + ".Days." + this.pad(date.getMonth() + 1, 2) + date.toLocaleString('en-us', { month: 'long' }) + "." + this.pad(date.getDate(), 2), Value, true)
+      await this.setStateAsync(oS.alias + "." + date.getFullYear() + ".Days." + this.pad(date.getMonth() + 1, 2) + "_" + date.toLocaleString('en-us', { month: 'long' }) + "." + this.pad(date.getDate(), 2), Value, true)
     }
   }
 
@@ -348,9 +368,26 @@ class PeriodCounter extends utils.Adapter {
       if (iobrokerObject && iobrokerObject.common && iobrokerObject.common.custom && iobrokerObject.common.custom[this.namespace] && iobrokerObject.common.custom[this.namespace].enabled) {
         this.log.info('initial (enabled ): ' + iobrokerObject._id)
         var oS = new ObjectSettings(iobrokerObject, this.namespace)
+        await this._SET_CreateObject(oS.alias + "._counterID", oS.alias + " id", "", "")
+        await this.setStateAsync(oS.alias + "._counterID", oS.id, true)
         this.dicDatas[oS.id] = oS
 
         let currentvalue = await this.getForeignStateAsync(oS.id)
+
+        var currentVal = 0
+        if (currentvalue && currentvalue.val && Number(currentvalue.val) != Number.NaN) {
+          currentVal = Number(currentvalue.val)
+
+        }
+        await this.createChannelAsync(oS.alias, "_startValues")
+        this.subscribeStates(oS.alias + "._startValues.*")
+
+        oS.start_day = Number(await this._GET_ReadOutStartValueAndCreateIfNotExists(oS, "day", currentVal))
+        oS.start_week = Number(await this._GET_ReadOutStartValueAndCreateIfNotExists(oS, "week", currentVal))
+        oS.start_month = Number(await this._GET_ReadOutStartValueAndCreateIfNotExists(oS, "month", currentVal))
+        oS.start_year = Number(await this._GET_ReadOutStartValueAndCreateIfNotExists(oS, "year", currentVal))
+
+
         if (currentvalue) {
           if (currentvalue.val == 0) {
             oS.lastGoodValue = oS.start_day
@@ -386,10 +423,10 @@ class PeriodCounter extends utils.Adapter {
       await this._SET_CreateObject(oS.alias + ".Current_Year", "Current Year", "value.Current.Year", oS.output_unit)
 
       let i
-      for (i = 0; i < 365; i++) {
+      for (i = 0; i < this.config.generateDPDays; i++) {
         let dat = new Date()
         dat.setDate(dat.getDate() + i)
-        await this._Generate_HistoryDatapoints(this.dicDatas[oneOD], dat)
+        await this._Generate_HistoryDatapoints(oS, dat)
       }
 
       //Before erzeugen bzw leeren
@@ -564,27 +601,40 @@ class PeriodCounter extends utils.Adapter {
 
   /**
 * extends the Object with customData in the correct namespace
-* @param {string} id
-* @param {object} customData
+* @param {ObjectSettings} oS
+* @param {string} type
+* @param {object} value
 */
-  async _SET_updateObjectCustomData(id, customData) {
-    // Prepare custom object and store correct values
-    const obj = {};
-    obj.common = {};
-    obj.common.custom = {};
-    obj.common.custom[this.namespace] = customData
-    this.unsubscribeForeignObjects('*')
-    await this.extendForeignObject(id, obj);
-    this.subscribeForeignObjects('*')
+  async _SET_startValue(oS, type, value) {
+    await this.setStateAsync(oS.alias + "._startValues.start_" + type, value, true)
+  }
+  /**
+* extends the Object with customData in the correct namespace
+* @param {ObjectSettings} oS
+* @param {string} type
+* @param {object} value
+*/
+  async _GET_ReadOutStartValueAndCreateIfNotExists(oS, type, value) {
+    await this._SET_CreateObject(oS.alias + "._startValues.start_" + type, "start_" + type, "", "")
+
+    let state = await this.getStateAsync(oS.alias + "._startValues.start_" + type)
+    if (!state || state.val == null || state.val == undefined) {
+      await this.setStateAsync(oS.alias + "._startValues.start_" + type, value, true)
+      state = await this.getStateAsync(oS.alias + "._startValues.start_" + type)
+    }
+    if (state) {
+      return state.val
+    }
   }
 }
+
 
 // @ts-ignore parent is a valid property on module
 if (module.parent) {
   // Export the constructor in compact mode
-	/**
-	 * @param {Partial<utils.AdapterOptions>} [options={}]
-	 */
+  /**
+   * @param {Partial<utils.AdapterOptions>} [options={}]
+   */
   module.exports = (options) => new PeriodCounter(options);
 } else {
   // otherwise start the instance directly

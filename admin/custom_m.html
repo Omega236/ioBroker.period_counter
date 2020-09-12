@@ -59,26 +59,7 @@
 
   </div>
 
-  <p class="center translate title">start values</p>
-  <div class="row">
-		<div class="col s3">
-			<input type="number" data-field="start_day"/>
-			<span class="translate">value at year day</span>
-    </div>
-    <div class="col s3">
-			<input type="number" data-field="start_week"/>
-			<span class="translate">value at year week</span>
-    </div>
-		<div class="col s3">
-			<input type="number" data-field="start_month"/>
-			<span class="translate">value at year month</span>
-    </div>
-		<div class="col s3">
-			<input type="number" data-field="start_year"/>
-			<span class="translate">value at year start</span>
-    </div>
 
-  </div>
 
   <p class="center translate title">Read Data from History</p>
 
@@ -103,18 +84,14 @@
         alias:          null,
         output_unit:    null,
         output_multiplier:1,
-        detailed_days:true,
-        detailed_weeks:true,
-        detailed_months:true,
-        detailed_years:true,
-        before_days:1,
-        before_weeks:1,
-        before_months:1,
-        before_years:1,
-        start_day:0,
-        start_week:0,
-        start_month:0,
-        start_year:0
+        detailed_days: instanceObj.native.detailed_days,
+        detailed_weeks: instanceObj.native.detailed_weeks,
+        detailed_months: instanceObj.native.detailed_months,
+        detailed_years: instanceObj.native.detailed_years,
+        before_days: instanceObj.native.before_days,
+        before_weeks: instanceObj.native.before_weeks,
+        before_months: instanceObj.native.before_months,
+        before_years: instanceObj.native.before_years
 			};
 		}
 	}
