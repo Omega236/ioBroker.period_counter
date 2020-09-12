@@ -31,14 +31,15 @@ class ObjectSettings {
     this.before_weeks = abc.before_weeks,
     this.before_months = abc.before_months,
     this.before_years = abc.before_years,
-    this.start_day = abc.start_day,
-    this.start_week = abc.start_week,
-    this.start_month = abc.start_month,
-    this.start_year = abc.start_year
-
-
     this.lastGoodValue = 0
     this.was0 = false
+
+    this.start_day = 0
+    this.start_week = 0
+    this.start_month = 0
+    this.start_year = 0
+
+    
     
   }
 }

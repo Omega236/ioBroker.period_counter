@@ -14,13 +14,13 @@ systemDictionary = {
 		"pl": "Ustawienia adaptera dla period_counter",
 		"zh-cn": "period_counter的适配器设置"
 	},
-	"option1": {
-		"en": "option1",
-		"de": "Option 1",
+	"generateDPDays": {
+		"en": "generateDPDays",
+		"de": "generateDPDays 1",
 		"ru": "Опция 1",
 		"pt": "Opção 1",
 		"nl": "Optie 1",
-		"fr": "Option 1",
+		"fr": "generateDPDays 1",
 		"it": "opzione 1",
 		"es": "Opción 1",
 		"pl": "opcja 1",
