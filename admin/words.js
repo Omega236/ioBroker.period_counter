@@ -15,16 +15,8 @@ systemDictionary = {
 		"zh-cn": "period_counter的适配器设置"
 	},
 	"generateDPDays": {
-		"en": "generateDPDays",
-		"de": "generateDPDays 1",
-		"ru": "Опция 1",
-		"pt": "Opção 1",
-		"nl": "Optie 1",
-		"fr": "generateDPDays 1",
-		"it": "opzione 1",
-		"es": "Opción 1",
-		"pl": "opcja 1",
-		"zh-cn": "选项1"
+		"en": "Generate Datapoints for x days in future",
+		"de": "Generate Datapoints for x days in future",
 	},
 	"option2": {
 		"en": "option2",

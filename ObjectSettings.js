@@ -39,6 +39,10 @@ class ObjectSettings {
     this.start_month = 0
     this.start_year = 0
 
+    this.counterResetDetection = abc.counterResetDetection
+
+    this.counterResetDetetion0Ignore = abc.counterResetDetetion0Ignore
+
     
     
   }

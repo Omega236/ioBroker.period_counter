@@ -61,7 +61,7 @@ class PeriodCounter extends utils.Adapter {
         //#####
         //reset week
         //#####
-        if (date.getDay() == 0) {
+        if (date.getDay() == 1) { //0 = Sunday
           this.log.info(oneOD + " Wochenbeginn setze before ")
           await this._fillStateBefore(oS, "Week", oS.before_weeks)
 
@@ -150,7 +150,7 @@ class PeriodCounter extends utils.Adapter {
             let valadsaf = await this.getForeignStateAsync(oS.id)
             if (valadsaf)
               await this._fillCurrentValues(oS, new Date(), valadsaf.val)
-      
+
           }
         }
 
@@ -217,6 +217,16 @@ class PeriodCounter extends utils.Adapter {
     }
   }
 
+
+  /**
+* calculate the current Values, needed on Adapterstart, Day-Change and ValueChange
+* @param {Number} theNumber
+* @returns {Number}
+*/
+  _roundto(theNumber) {
+    return Number((theNumber).toFixed(10))
+  }
+
   /**
   * calculate the current Values, needed on Adapterstart, Day-Change and ValueChange
   * @param {ObjectSettings} oS
@@ -227,45 +237,52 @@ class PeriodCounter extends utils.Adapter {
     //if (date.getHours() === 0 && date.getMinutes() == 0) {
     //  date = new Date(date.getMilliseconds() - date.getTime() - 1)
     //}
-    if (current_value == 0) {
+    current_value = this._roundto(current_value)
+    if (oS.counterResetDetetion0Ignore && current_value == 0) {
       current_value = oS.lastGoodValue
       oS.was0 = true
     }
 
-    if (current_value < oS.lastGoodValue) {
+
+    if (oS.counterResetDetection && current_value < oS.lastGoodValue) {
       //Verringerung erkannt -> neuanpassung der startWerte
-      var theAnpassung = oS.lastGoodValue - current_value
-      if (oS.was0)
+      var theAnpassung = this._roundto( oS.lastGoodValue - current_value)
+      if (oS.was0) {
         theAnpassung = oS.lastGoodValue
+        oS.was0 = false
+
+      }
 
       this.log.warn(oS.id + " wurde scheinbar resetet! Reset von " + oS.lastGoodValue + " nach " + current_value + " passe alle Startwerte an")
+      oS.lastGoodValue = current_value
 
-      oS.start_day -= theAnpassung
+      oS.start_day = this._roundto((oS.start_day - theAnpassung))
       await this._SET_startValue(oS, "day", oS.start_day)
-      oS.start_week -= theAnpassung
+      oS.start_week = this._roundto((oS.start_week - theAnpassung))
       await this._SET_startValue(oS, "week", oS.start_week)
-      oS.start_month -= theAnpassung
+      oS.start_month = this._roundto((oS.start_month - theAnpassung))
       await this._SET_startValue(oS, "month", oS.start_month)
-      oS.start_year -= theAnpassung
+      oS.start_year = this._roundto((oS.start_year - theAnpassung))
       await this._SET_startValue(oS, "year", oS.start_year)
 
     }
-
     oS.lastGoodValue = current_value
 
-    let current_Day = (current_value - oS.start_day) * oS.output_multiplier
+
+
+    let current_Day = this._roundto(this._roundto(current_value - oS.start_day) * oS.output_multiplier)
     await this.setStateAsync(oS.alias + '.Current_Day', current_Day, true)
     this._Update_DayState(oS, date, current_Day)
 
-    let current_Week = (current_value - oS.start_week) * oS.output_multiplier
+    let current_Week = this._roundto( this._roundto(current_value - oS.start_week) * oS.output_multiplier)
     await this.setStateAsync(oS.alias + '.Current_Week', current_Week, true)
     this._Update_WeekState(oS, date, current_Week)
 
-    let current_Month = (current_value - oS.start_month) * oS.output_multiplier
+    let current_Month =  this._roundto(this._roundto(current_value - oS.start_month) * oS.output_multiplier)
     await this.setStateAsync(oS.alias + '.Current_Month', current_Month, true)
     this._Update_MonthState(oS, date, current_Month)
 
-    let current_Year = (current_value - oS.start_year) * oS.output_multiplier
+    let current_Year =  this._roundto(this._roundto(current_value - oS.start_year) * oS.output_multiplier)
     await this.setStateAsync(oS.alias + '.Current_Year', current_Year, true)
     this._Update_YearState(oS, date, current_Year)
 
@@ -333,7 +350,7 @@ class PeriodCounter extends utils.Adapter {
  */
   _Get_KW(date) {
     // Copy date so don't modify original
-    let d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    let d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     d.setHours(0, 0, 0, 0);
     // Thursday in current week decides the year.
     d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
@@ -389,7 +406,7 @@ class PeriodCounter extends utils.Adapter {
 
 
         if (currentvalue) {
-          if (currentvalue.val == 0) {
+          if (oS.counterResetDetetion0Ignore && currentvalue.val == 0) {
             oS.lastGoodValue = oS.start_day
           }
           else {
