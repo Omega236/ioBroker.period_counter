@@ -61,8 +61,17 @@
 
 
 
-  <p class="center translate title">Read Data from History</p>
-
+  <p class="center translate title">Counter Reset Detection</p>
+  <div class="row">
+		<div class="col s3">
+			<input type="checkbox" data-field="counterResetDetection" data-default="true"/>
+			<span class="translate">Enable Counter Reset Detection</span>
+    </div>
+    <div class="col s3">
+			<input type="checkbox" data-field="counterResetDetetion0Ignore" data-default="true"/>
+      <span class="translate">Ignore 0 Value for Reset Detection</span>
+    </div>
+  </div>
 
 </script>
 
@@ -91,7 +100,10 @@
         before_days: instanceObj.native.before_days,
         before_weeks: instanceObj.native.before_weeks,
         before_months: instanceObj.native.before_months,
-        before_years: instanceObj.native.before_years
+        before_years: instanceObj.native.before_years,
+        counterResetDetection: instanceObj.native.counterResetDetection,
+        counterResetDetetion0Ignore: instanceObj.native.counterResetDetetion0Ignore
+
 			};
 		}
 	}

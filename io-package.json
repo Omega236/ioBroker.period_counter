@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "period_counter",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "news": {
+      "0.1.0": {
+        "en": "First Test",
+        "de": "Erste Testversion"
+      },
       "0.0.1": {
         "en": "initial release",
         "de": "Erstveröffentlichung",
@@ -19,7 +23,7 @@
     "title": "Period Counter",
     "titleLang": {
       "en": "Period Counter",
-      "de": "Periodenzähler",
+      "de": "Periode Counter",
       "ru": "Счетчик периода",
       "pt": "Contador de Período",
       "nl": "Periode teller",
@@ -72,7 +76,6 @@
   },
   "native": {
     "generateDPDays": 30,
-    "option2": "42",
     "detailed_days": false,
     "detailed_weeks": true,
     "detailed_months": true,
@@ -80,7 +83,9 @@
     "before_days": 3,
     "before_weeks": 3,
     "before_months": 3,
-    "before_years": 3
+    "before_years": 3,
+    "counterResetDetection": true,
+    "counterResetDetetion0Ignore":true
   },
   "objects": [],
   "instanceObjects": []

@@ -76,6 +76,8 @@ For later updates, the above procedure is not necessary. Just do the following:
 1. Execute `iobroker upload period_counter` on the ioBroker host
 
 ## Changelog
+### 0.1.0
+* (Omega236) First Test Version
 
 ### 0.0.1
 * (Omega236) initial release
