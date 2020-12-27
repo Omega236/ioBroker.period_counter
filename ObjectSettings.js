@@ -23,25 +23,33 @@ class ObjectSettings {
       this.output_unit = iobrokerObject.common.unit
     }
     this.output_multiplier = abc.output_multiplier,
-    this.detailed_days = abc.detailed_days,
-    this.detailed_weeks = abc.detailed_weeks,
-    this.detailed_months = abc.detailed_months,
-    this.detailed_years = abc.detailed_years,
-    this.before_days = abc.before_days,
-    this.before_weeks = abc.before_weeks,
-    this.before_months = abc.before_months,
-    this.before_years = abc.before_years,
+    this.detailed_Minutes = false,
+    this.detailed_Hours = false,
+    this.detailed_Days = abc.detailed_days,
+    this.detailed_Weeks = abc.detailed_weeks,
+    this.detailed_Months = abc.detailed_months,
+    this.detailed_Quarters = abc.detailed_quarters,
+    this.detailed_Years = abc.detailed_years,
+    this.before_Minutes = abc.before_minutes,
+    this.before_Hours = abc.before_hours,
+    this.before_Days = abc.before_days,
+    this.before_Weeks = abc.before_weeks,
+    this.before_Months = abc.before_months,
+    this.before_Quarters = abc.before_quarters,
+    this.before_Years = abc.before_years,
     this.lastGoodValue = 0
-    this.was0 = false
+    this.FirstWrongValue = Number.NaN
+    this.lastWrongValue = NaN
+    
 
-    this.start_day = 0
-    this.start_week = 0
-    this.start_month = 0
-    this.start_year = 0
 
     this.counterResetDetection = abc.counterResetDetection
 
-    this.counterResetDetetion0Ignore = abc.counterResetDetetion0Ignore
+    //this.counterResetDetetion0Ignore = abc.counterResetDetetion0Ignore
+    this.counterResetDetetion_CountAfterReset = abc.counterResetDetetion_CountAfterReset
+    this.counterResetDetetion_CurrentCountAfterReset = 0
+
+
 
     
     

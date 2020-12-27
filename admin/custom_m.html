@@ -18,93 +18,129 @@
 		</div>
 		
   </div>
-  <p class="center translate title">Detailed History</p>
+  <p class=" translate title">Detailed History</p>
   <div class="row">
-		<div class="col s3">
-			<input type="checkbox" data-field="detailed_days"/>
-			<span class="translate">Create Datapoint for Every Day </span>
-    </div>
-    <div class="col s3">
-			<input type="checkbox" data-field="detailed_weeks"/>
-			<span class="translate">Create Datapoint for Every week</span>
-    </div>
-		<div class="col s3">
-			<input type="checkbox" data-field="detailed_months"/>
-			<span class="translate">Create Datapoint for Every  month</span>
-    </div>
-		<div class="col s3">
-			<input type="checkbox" data-field="detailed_years"/>
-			<span class="translate">Create Datapoint for Every  year</span>
-    </div>
-
-  </div>
-  <p class="center translate title">Before Data</p>
-  <div class="row">
-		<div class="col s3">
-			<input type="number" data-field="before_days"/>
-			<span class="translate">Create Datapoints for before Day</span>
-    </div>
-    <div class="col s3">
-			<input type="number" data-field="before_weeks"/>
-			<span class="translate">Create Datapoints for before week</span>
-    </div>
-		<div class="col s3">
-			<input type="number" data-field="before_months"/>
-			<span class="translate">Create Datapoints for before month</span>
-    </div>
-		<div class="col s3">
-			<input type="number" data-field="before_years"/>
-			<span class="translate">Create Datapoints for before year</span>
-    </div>
+    <span class="translate">Create for every Timespan a extra ObjectId in Tree</span>
 
   </div>
 
-
-
-  <p class="center translate title">Counter Reset Detection</p>
   <div class="row">
-		<div class="col s3">
-			<input type="checkbox" data-field="counterResetDetection" data-default="true"/>
-			<span class="translate">Enable Counter Reset Detection</span>
+    <div class="col  input-field">
+      <input type="checkbox" class="value" data-field="detailed_days" />
+      <span class="translate" >Every Day (Many Datapoints)</label>
     </div>
-    <div class="col s3">
-			<input type="checkbox" data-field="counterResetDetetion0Ignore" data-default="true"/>
-      <span class="translate">Ignore 0 Value for Reset Detection</span>
+    <div class="col  input-field">
+      <input type="checkbox" class="value" data-field="detailed_weeks" />
+      <span class="translate">Every week</span>
     </div>
+    <div class="col  input-field">
+      <input type="checkbox" class="value" data-field="detailed_months" />
+      <span class="translate">Every month</span>
+    </div>
+    <div class="col  input-field">
+      <input type="checkbox" class="value" data-field="detailed_quarters" />
+      <span class="translate">Every quarter</span>
+    </div>
+    <div class="col  input-field">
+      <input type="checkbox" class="value" data-field="detailed_years" />
+      <span class="translate">Every year</span>
+    </div>
+
   </div>
+  <p class=" translate title">Current / previous Data</p>
+  <div class="row">
+    <span class="translate">-1 = no Data collected (also current), 0 = only current timespan, > 0 the timespans before </span>
+  </div>
+  <div class="row">
+    <div class="col s2 input-field">
+      <input type="number" class="value" data-field="before_minutes" />
+      <span class="translate">Keep previous Minutes</span>
+    </div>
+    <div class="col s2 input-field">
+      <input type="number" class="value" data-field="before_hours" />
+      <span class="translate">Keep previous Hours</span>
+    </div>
+
+  </div>
+  <div class="row">
+
+    <div class="col s2 input-field">
+      <input type="number" class="value" data-field="before_days" />
+      <span class="translate">Keep previous Day</span>
+    </div>
+    <div class="col s2 input-field">
+      <input type="number" class="value" data-field="before_weeks" />
+      <span class="translate">Keep previous week</span>
+    </div>
+    <div class="col s2 input-field">
+      <input type="number" class="value" data-field="before_months" />
+      <span class="translate">Keep previous month</span>
+    </div>
+    <div class="col s2 input-field">
+      <input type="number" class="value" data-field="before_quarters" />
+      <span class="translate">Keep previous quarters</span>
+    </div>
+    <div class="col s2 input-field">
+      <input type="number" class="value" data-field="before_years" />
+      <span class="translate">Keep previous year</span>
+    </div>
+
+  </div>
+  <p class=" translate title">Counter Reset Detection</p>
+  <div class="row">
+    <div class="col s3 input-field">
+      <input type="checkbox" class="value" data-field="counterResetDetection" />
+      <span class="translate">Enable Counter Reset Detection</span>
+    </div>
+    <div class="col s3 input-field">
+      <input type="number" class="value" data-field="counterResetDetetion_CountAfterReset" />
+      <span class="translate">Ignore Values Lower then the Last Good Value</span>
+    </div>
+
+  </div>
+
+</div>
+
+  
 
 </script>
 
 <script type="text/javascript">
-	$.get("adapter/period_counter/words.js", function(script) {
-		let translation = script.substring(script.indexOf('{'), script.length);
-		translation = translation.substring(0, translation.lastIndexOf(';'));
-		$.extend(systemDictionary, JSON.parse(translation));
-	});
+  $.get("adapter/period_counter/words.js", function (script) {
+    let translation = script.substring(script.indexOf('{'), script.length);
+    translation = translation.substring(0, translation.lastIndexOf(';'));
+    $.extend(systemDictionary, JSON.parse(translation));
+  });
 
-	// There are two ways how to predefine default settings:
-	// - with attribute "data-default" (content independent)
-	// - with function in global variable "defaults". Function name is equal with adapter name.
-	//   as input function receives object with all information concerning it
-	if (typeof defaults !== 'undefined') {
-		defaults["period_counter"] = function (obj, instanceObj) {
-			return {
-        enabled:        false		,
-        alias:          null,
-        output_unit:    null,
-        output_multiplier:1,
+
+
+
+  // There are two ways how to predefine default settings:
+  // - with attribute "data-default" (content independent)
+  // - with function in global variable "defaults". Function name is equal with adapter name.
+  //   as input function receives object with all information concerning it
+  if (typeof defaults !== 'undefined') {
+    defaults["period_counter"] = function (obj, instanceObj) {
+      return {
+        enabled: false,
+        alias: null,
+        output_unit: null,
+        output_multiplier: 1,
         detailed_days: instanceObj.native.detailed_days,
         detailed_weeks: instanceObj.native.detailed_weeks,
         detailed_months: instanceObj.native.detailed_months,
         detailed_years: instanceObj.native.detailed_years,
+        before_minutes: instanceObj.native.before_minutes,
+        before_hours: instanceObj.native.before_hours,
         before_days: instanceObj.native.before_days,
         before_weeks: instanceObj.native.before_weeks,
         before_months: instanceObj.native.before_months,
+        before_quarters: instanceObj.native.before_quarters,
         before_years: instanceObj.native.before_years,
         counterResetDetection: instanceObj.native.counterResetDetection,
-        counterResetDetetion0Ignore: instanceObj.native.counterResetDetetion0Ignore
+        counterResetDetetion_CountAfterReset: instanceObj.native.counterResetDetetion_CountAfterReset
 
-			};
-		}
-	}
+      };
+    }
+  }
 </script>

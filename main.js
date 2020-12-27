@@ -8,10 +8,30 @@
 // you need to create an adapter
 const utils = require("@iobroker/adapter-core")
 
-
 const cron = require('node-cron') // Cron Schedulervar
 
 const ObjectSettings = require('./ObjectSettings.js')
+
+const TimePeriods = {
+  Minute: 'Minute',
+  Hour: 'Hour',
+  Day: 'Day',
+  Week: 'Week',
+  Month: 'Month',
+  Quarter: 'Quarter',
+  Year: 'Year'
+}
+
+
+const TimePeriodsZahl = {
+  Minute: "001",
+  Hour: "002",
+  Day: "01",
+  Week: "02",
+  Month: "03",
+  Quarter: "04",
+  Year: "05"
+}
 
 // Load your modules here, e.g.:
 // const fs = require("fs");
@@ -31,7 +51,10 @@ class PeriodCounter extends utils.Adapter {
     this.on("stateChange", this.onStateChange.bind(this));
     this.on("objectChange", this.onObjectChange.bind(this));
     this.on("unload", this.onUnload.bind(this));
+    this.on('message', this.onMessage.bind(this));
   }
+
+
 
   /**
    * Is called when databases are connected and adapter received configuration.
@@ -41,68 +64,111 @@ class PeriodCounter extends utils.Adapter {
     await this.initialObjects()
     this.subscribeForeignObjects('*')
 
-    cron.schedule('0 0 * * *', async () => {
+    cron.schedule('* * * * *', async () => {
       let date = new Date()
-      //New Day
-      this.log.debug('Mitternacht')
       for (let oneOD in this.dicDatas) {
-        //#####
-        //reset Day
-        //#####
-        //before day
+
         let oS = this.dicDatas[oneOD]
-        this.log.info(oneOD + " Mitternacht setze before ")
-        await this._fillStateBefore(oS, "Day", oS.before_days)
-        //start_day
-        this.log.info(oneOD + " Mitternacht setze start_day auf  " + oS.lastGoodValue)
-        oS.start_day = oS.lastGoodValue
-        await this._SET_startValue(oS, "day", oS.start_day)
+        //New Minute
 
-        //#####
-        //reset week
-        //#####
-        if (date.getDay() == 1) { //0 = Sunday
-          this.log.info(oneOD + " Wochenbeginn setze before ")
-          await this._fillStateBefore(oS, "Week", oS.before_weeks)
+        this.log.info(oneOD + " MinutenWechsel setze before ")
+        await this._fillPreviousStates(oS, TimePeriods.Minute)
+        //start_minute
+        this.log.info(oneOD + " MinutenWechsel setze start_minute auf  " + oS.lastGoodValue)
+        await this._SET_startValue(oS, TimePeriods.Minute, oS.lastGoodValue)
+        await this.setCurrentValue(oS, oS.lastGoodValue,  TimePeriods.Minute, date)
 
-          //start_week setzen
-          this.log.info(oneOD + " Wochenbeginn setze start_week auf  " + oS.lastGoodValue)
-          oS.start_week = oS.lastGoodValue
-          await this._SET_startValue(oS, "week", oS.start_week)
 
-        }
-        //#####
-        //reset month
-        //#####
-        if (date.getDate() == 1) {
-          this.log.info(oneOD + " Monatsbeginn setze before ")
-          await this._fillStateBefore(oS, "Month", oS.before_months)
-
-          //start_month setzen
-          this.log.info(oneOD + " Monatsbeginn setze start_month auf  " + oS.lastGoodValue)
-          oS.start_month = oS.lastGoodValue
-          await this._SET_startValue(oS, "month", oS.start_month)
-
-        }
-        //#####
-        //reset year
-        //#####
-        if (date.getUTCMonth() == 0 && date.getDate() == 0) {
-          this.log.info(oneOD + " Jahresbeginn setze before ")
-          await this._fillStateBefore(oS, "Year", oS.before_years)
-
-          //start_year setzen
-          this.log.info(oneOD + " Monatsbeginn setze start_Year auf  " + oS.lastGoodValue)
-          oS.start_year = oS.lastGoodValue
-          await this._SET_startValue(oS, "year", oS.start_year)
+        if (date.getMinutes() == 0)
+        {
+          //#####
+          //reset Hour
+          //#####
+          //before houre
+          this.log.info(oneOD + " Stundenwechsel setze before ")
+          await this._fillPreviousStates(oS, TimePeriods.Hour)
+          //start_Hour
+          this.log.info(oneOD + " Stundenwechsel setze start_hour auf  " + oS.lastGoodValue)
+          await this._SET_startValue(oS, TimePeriods.Hour, oS.lastGoodValue)
+          await this.setCurrentValue(oS, oS.lastGoodValue,  TimePeriods.Hour, date)
 
         }
 
+        if (date.getHours() == 0 && date.getMinutes() == 0) {
+          this.log.debug('Mitternacht')
+
+          //#####
+          //reset Day
+          //#####
+          //before day
+          this.log.info(oneOD + " Mitternacht setze before ")
+          await this._fillPreviousStates(oS, TimePeriods.Day)
+          //start_day
+          this.log.info(oneOD + " Mitternacht setze start_day auf  " + oS.lastGoodValue)
+          await this._SET_startValue(oS, TimePeriods.Day, oS.lastGoodValue)
+          await this.setCurrentValue(oS, oS.lastGoodValue,  TimePeriods.Day, date)
+
+          //#####
+          //reset week
+          //#####
+          if (date.getDay() == 1) { //0 = Sunday
+            this.log.info(oneOD + " Wochenbeginn setze before ")
+            await this._fillPreviousStates(oS, TimePeriods.Week)
+
+            //start_week setzen
+            this.log.info(oneOD + " Wochenbeginn setze start_week auf  " + oS.lastGoodValue)
+            await this._SET_startValue(oS, TimePeriods.Week, oS.lastGoodValue)
+            await this.setCurrentValue(oS, oS.lastGoodValue,  TimePeriods.Week, date)
+
+          }
+          //#####
+          //reset month
+          //#####
+          if (date.getDate() == 1) {
+            this.log.info(oneOD + " Monatsbeginn setze before ")
+            await this._fillPreviousStates(oS, TimePeriods.Month)
+
+            //start_month setzen
+            this.log.info(oneOD + " Monatsbeginn setze start_month auf  " + oS.lastGoodValue)
+            await this._SET_startValue(oS, TimePeriods.Month, oS.lastGoodValue)
+            await this.setCurrentValue(oS, oS.lastGoodValue,  TimePeriods.Month, date)
+
+          }
+
+          //#####
+          //reset quarter
+          //#####
+          if (date.getDate() == 1 && (date.getMonth() % 3) == 0) {
+            this.log.info(oneOD + " QuarterBeginn setze before ")
+            await this._fillPreviousStates(oS, TimePeriods.Quarter)
+
+            //start_quarter setzen
+            this.log.info(oneOD + " QuarterBeginn setze start_quarter auf  " + oS.lastGoodValue)
+            await this._SET_startValue(oS, TimePeriods.Quarter, oS.lastGoodValue)
+            await this.setCurrentValue(oS, oS.lastGoodValue,  TimePeriods.Quarter, date)
+
+          }
+
+
+          //#####
+          //reset year
+          //#####
+          if (date.getMonth() == 0 && date.getDate() == 1) {
+            this.log.info(oneOD + " Jahresbeginn setze before ")
+            await this._fillPreviousStates(oS, TimePeriods.Year)
+
+            //start_year setzen
+            this.log.info(oneOD + " Monatsbeginn setze start_Year auf  " + oS.lastGoodValue)
+            await this._SET_startValue(oS, TimePeriods.Year, oS.lastGoodValue)
+            await this.setCurrentValue(oS, oS.lastGoodValue,  TimePeriods.Year, date)
+
+          }
+          //await this._Generate_AllObjects()
+
+
+        }
       }
 
-
-      await this._Generate_AllObjects()
-      await this._fillAllCurrentValues()
 
 
     })
@@ -134,19 +200,7 @@ class PeriodCounter extends utils.Adapter {
         if (idoS) {
           let oS = this.dicDatas[idoS.val]
           if (oS) {
-            let variable = idsplit.pop()
-            if (variable == "start_day") {
-              oS.start_day = state.val
-            }
-            else if (variable == "start_week") {
-              oS.start_week = state.val
-            }
-            else if (variable == "start_month") {
-              oS.start_month = state.val
-            }
-            else if (variable == "start_year") {
-              oS.start_year = state.val
-            }
+ 
             let valadsaf = await this.getForeignStateAsync(oS.id)
             if (valadsaf)
               await this._fillCurrentValues(oS, new Date(), valadsaf.val)
@@ -187,19 +241,25 @@ class PeriodCounter extends utils.Adapter {
  * Pull the before Values one level back
  * @param {ObjectSettings} oS
  * @param {string} beforetype
- * @param {number} beforeCount
  */
-  async _fillStateBefore(oS, beforetype, beforeCount) {
+  async _fillPreviousStates(oS, beforetype) {
     //Days before befüllen
+    let beforeCount = oS['before_' + beforetype + 's']
     let iBeforeCount
     for (iBeforeCount = beforeCount; iBeforeCount > 1; iBeforeCount--) {
-      let theValBefore = await this.getStateAsync(oS.alias + "." + beforetype + "sBefore.Before_" + this.pad(iBeforeCount - 1, 2))
-      if (theValBefore) {
-        await this.setStateAsync(oS.alias + "." + beforetype + "sBefore.Before_" + this.pad(iBeforeCount, 2), Number(theValBefore.val), true)
+      let theValBefore = await this.getStateAsync(oS.alias + await this._GET_ObjectID_previous(oS, beforetype, iBeforeCount -1))
+      let theObjectBefore = await this.getObjectAsync(oS.alias + await this._GET_ObjectID_previous(oS, beforetype, iBeforeCount -1))
+      if (theValBefore  && theObjectBefore) {
+        await this.setStateAsync(oS.alias + await this._GET_ObjectID_previous(oS, beforetype, iBeforeCount), Number(theValBefore.val), true)
+        await this._SET_ExtendObject(oS, await this._GET_ObjectID_previous(oS, beforetype, iBeforeCount), theObjectBefore.common.name, 'value.history')
       }
     }
     if (iBeforeCount == 1) {
-      await this.setStateAsync(oS.alias + "." + beforetype + "sBefore.Before_" + this.pad(iBeforeCount, 2), oS.lastGoodValue, true)
+      let current_timeper = this._roundto(this._roundto(oS.lastGoodValue - await this._Get_StartValue(oS, beforetype, oS.lastGoodValue)) * oS.output_multiplier)
+
+      await this.setStateAsync(oS.alias + await this._GET_ObjectID_previous(oS, beforetype, iBeforeCount), current_timeper, true)
+      await this._SET_ExtendObject(oS, await this._GET_ObjectID_previous(oS, beforetype, iBeforeCount), await this._GET_ObjectID_DateInfoName_previous(oS, beforetype, new Date, 1),  'value.history')
+
     }
   }
 
@@ -224,7 +284,10 @@ class PeriodCounter extends utils.Adapter {
 * @returns {Number}
 */
   _roundto(theNumber) {
-    return Number((theNumber).toFixed(10))
+    if (theNumber)
+      return Number((theNumber).toFixed(10))
+    else
+      return 0
   }
 
   /**
@@ -238,111 +301,71 @@ class PeriodCounter extends utils.Adapter {
     //  date = new Date(date.getMilliseconds() - date.getTime() - 1)
     //}
     current_value = this._roundto(current_value)
-    if (oS.counterResetDetetion0Ignore && current_value == 0) {
-      current_value = oS.lastGoodValue
-      oS.was0 = true
-    }
+
 
 
     if (oS.counterResetDetection && current_value < oS.lastGoodValue) {
       //Verringerung erkannt -> neuanpassung der startWerte
-      var theAnpassung = this._roundto( oS.lastGoodValue - current_value)
-      if (oS.was0) {
-        theAnpassung = oS.lastGoodValue
-        oS.was0 = false
+      if (Number.isNaN(oS.FirstWrongValue)) {
+        oS.FirstWrongValue = current_value
+        oS.counterResetDetetion_CurrentCountAfterReset = 0
+      }
+      if (oS.lastWrongValue != current_value) {
+        oS.counterResetDetetion_CurrentCountAfterReset += 1
+        oS.lastWrongValue = current_value
+      }
+      if (oS.counterResetDetetion_CurrentCountAfterReset < oS.counterResetDetetion_CountAfterReset) {
+        return
 
       }
 
+      var theAnpassung = this._roundto(oS.lastGoodValue - oS.FirstWrongValue)
+
+
       this.log.warn(oS.id + " wurde scheinbar resetet! Reset von " + oS.lastGoodValue + " nach " + current_value + " passe alle Startwerte an")
       oS.lastGoodValue = current_value
+      oS.lastWrongValue = NaN
+      oS.FirstWrongValue = NaN
+      oS.counterResetDetetion_CurrentCountAfterReset = 0
+      
+      await [TimePeriods.Minute, TimePeriods.Hour, TimePeriods.Day, TimePeriods.Month, TimePeriods.Week, TimePeriods.Quarter, TimePeriods.Year].forEach(async TimePeriod => {
+        await this._SET_startValue(oS, TimePeriod, (await this._Get_StartValue(oS, TimePeriod, current_value) - theAnpassung))
+      })
 
-      oS.start_day = this._roundto((oS.start_day - theAnpassung))
-      await this._SET_startValue(oS, "day", oS.start_day)
-      oS.start_week = this._roundto((oS.start_week - theAnpassung))
-      await this._SET_startValue(oS, "week", oS.start_week)
-      oS.start_month = this._roundto((oS.start_month - theAnpassung))
-      await this._SET_startValue(oS, "month", oS.start_month)
-      oS.start_year = this._roundto((oS.start_year - theAnpassung))
-      await this._SET_startValue(oS, "year", oS.start_year)
+ 
 
     }
     oS.lastGoodValue = current_value
-
-
-
-    let current_Day = this._roundto(this._roundto(current_value - oS.start_day) * oS.output_multiplier)
-    await this.setStateAsync(oS.alias + '.Current_Day', current_Day, true)
-    this._Update_DayState(oS, date, current_Day)
-
-    let current_Week = this._roundto( this._roundto(current_value - oS.start_week) * oS.output_multiplier)
-    await this.setStateAsync(oS.alias + '.Current_Week', current_Week, true)
-    this._Update_WeekState(oS, date, current_Week)
-
-    let current_Month =  this._roundto(this._roundto(current_value - oS.start_month) * oS.output_multiplier)
-    await this.setStateAsync(oS.alias + '.Current_Month', current_Month, true)
-    this._Update_MonthState(oS, date, current_Month)
-
-    let current_Year =  this._roundto(this._roundto(current_value - oS.start_year) * oS.output_multiplier)
-    await this.setStateAsync(oS.alias + '.Current_Year', current_Year, true)
-    this._Update_YearState(oS, date, current_Year)
-
+    await [TimePeriods.Minute, TimePeriods.Hour, TimePeriods.Day, TimePeriods.Month, TimePeriods.Week, TimePeriods.Quarter, TimePeriods.Year].forEach(async TimePeriod => {
+      await this.setCurrentValue(oS, current_value,  TimePeriod, date)
+    })
 
   }
 
-
-
-
-
-  /**
-* Is called if a subscribed object changes
+   /**
+* 
 * @param {ObjectSettings} oS
+* @param {string} type
 * @param {Date} date
-* @param {any} Value
 */
-  async _Update_DayState(oS, date, Value) {
-    if (oS.detailed_days) {
-      await this.setStateAsync(oS.alias + "." + date.getFullYear() + ".Days." + this.pad(date.getMonth() + 1, 2) + "_" + date.toLocaleString('en-us', { month: 'long' }) + "." + this.pad(date.getDate(), 2), Value, true)
-    }
+async setCurrentValue( oS, current_value,  type, date) {
+  let current_timeper = this._roundto(this._roundto(current_value - await this._Get_StartValue(oS, type, current_value)) * oS.output_multiplier)
+  if (oS['before_' + type + 's'] >= 0)
+  {
+      await this.setStateAsync( oS.alias + await this._GET_ObjectID_Current( type), current_timeper, true)
   }
 
-  /**
-  * Is called if a subscribed object changes
-  * @param {ObjectSettings} oS
-  * @param {Date} date
-  * @param {any} Value
-  */
-  async _Update_MonthState(oS, date, Value) {
-    if (oS.detailed_months) {
-
-      let MonthString = date.toLocaleString('en-us', { month: 'long' })
-      await this.setStateAsync(oS.alias + "." + date.getFullYear() + ".Months" + "." + this.pad(date.getMonth() + 1, 2) + "_" + MonthString, Value, true)
-    }
+  if (oS['detailed_' + type + 's'] === true){
+    let id = oS.alias +  await this._GET_ObjectID_Detailed(oS, type, date)
+    let val = current_timeper
+    await this.setStateAsync(id, val , true)
   }
 
-  /**
-* Is called if a subscribed object changes
-* @param {ObjectSettings} oS
-* @param {Date} date
-* @param {any} Value
-*/
-  async _Update_WeekState(oS, date, Value) {
-    if (oS.detailed_weeks) {
-      await this.setStateAsync(oS.alias + "." + date.getFullYear() + ".Weeks" + ".KW" + this.pad(this._Get_KW(date), 2), Value, true)
-    }
-  }
+}
 
-  /**
-  * Is called if a subscribed object changes
-  * @param {ObjectSettings} oS
-  * @param {Date} date
-  * @param {any} Value
-  */
-  async _Update_YearState(oS, date, Value) {
-    if (oS.detailed_years) {
-      await this.setStateAsync(oS.alias + "." + date.getFullYear() + ".Value", Value, true)
 
-    }
-  }
+
+
 
   /**
  * returns the KW of the date
@@ -361,6 +384,15 @@ class PeriodCounter extends utils.Adapter {
       - 3 + (week1.getDay() + 6) % 7) / 7);
 
   }
+
+    /**
+ * returns the KW of the date
+ * @param {Date} date
+ */
+_Get_Quarter(date) {
+   return Math.ceil((date.getMonth() + 1) / 3)
+
+}
 
 
 
@@ -385,7 +417,7 @@ class PeriodCounter extends utils.Adapter {
       if (iobrokerObject && iobrokerObject.common && iobrokerObject.common.custom && iobrokerObject.common.custom[this.namespace] && iobrokerObject.common.custom[this.namespace].enabled) {
         this.log.info('initial (enabled ): ' + iobrokerObject._id)
         var oS = new ObjectSettings(iobrokerObject, this.namespace)
-        await this._SET_CreateObject(oS.alias + "._counterID", oS.alias + " id", "", "")
+        await this._SET_ExtendObject(oS, "._counterID", " ObjectID ", "")
         await this.setStateAsync(oS.alias + "._counterID", oS.id, true)
         this.dicDatas[oS.id] = oS
 
@@ -399,15 +431,18 @@ class PeriodCounter extends utils.Adapter {
         await this.createChannelAsync(oS.alias, "_startValues")
         this.subscribeStates(oS.alias + "._startValues.*")
 
-        oS.start_day = Number(await this._GET_ReadOutStartValueAndCreateIfNotExists(oS, "day", currentVal))
-        oS.start_week = Number(await this._GET_ReadOutStartValueAndCreateIfNotExists(oS, "week", currentVal))
-        oS.start_month = Number(await this._GET_ReadOutStartValueAndCreateIfNotExists(oS, "month", currentVal))
-        oS.start_year = Number(await this._GET_ReadOutStartValueAndCreateIfNotExists(oS, "year", currentVal))
+        await this._Get_StartValue(oS, TimePeriods.Minute, currentVal)
+        await this._Get_StartValue(oS, TimePeriods.Hour, currentVal)
+        await this._Get_StartValue(oS, TimePeriods.Day, currentVal)
+        await this._Get_StartValue(oS, TimePeriods.Week, currentVal)
+        await this._Get_StartValue(oS, TimePeriods.Month, currentVal)
+        await this._Get_StartValue(oS, TimePeriods.Quarter, currentVal)
+        await this._Get_StartValue(oS, TimePeriods.Year, currentVal)
 
 
         if (currentvalue) {
-          if (oS.counterResetDetetion0Ignore && currentvalue.val == 0) {
-            oS.lastGoodValue = oS.start_day
+          if (currentvalue.val && currentvalue.val < await this._Get_StartValue(oS, TimePeriods.Day, currentVal)) {
+            oS.lastGoodValue = await this._Get_StartValue(oS, TimePeriods.Day, currentVal)
           }
           else {
             oS.lastGoodValue = Number(currentvalue.val)
@@ -433,24 +468,25 @@ class PeriodCounter extends utils.Adapter {
   async _Generate_AllObjects() {
     for (let oneOD in this.dicDatas) {
       let oS = this.dicDatas[oneOD]
-      await this._SET_CreateChannel(oS.alias, 'CounterData for ' + oS.id, false)
-      await this._SET_CreateObject(oS.alias + ".Current_Day", "Current Day", "value.Current.Day", oS.output_unit)
-      await this._SET_CreateObject(oS.alias + ".Current_Week", "Current Week", "value.Current.Week", oS.output_unit)
-      await this._SET_CreateObject(oS.alias + ".Current_Month", "Current Month", "value.Current.Month", oS.output_unit)
-      await this._SET_CreateObject(oS.alias + ".Current_Year", "Current Year", "value.Current.Year", oS.output_unit)
+      await this._SET_ExtendChannel(oS, "", 'CounterData for ' + oS.id,)
+      await [TimePeriods.Minute, TimePeriods.Hour, TimePeriods.Day, TimePeriods.Month, TimePeriods.Week, TimePeriods.Quarter, TimePeriods.Year].forEach(async beforeType => {
+        if (oS['before_' + beforeType + "s"] >= 0){
+          await this._SET_ExtendObject(oS, await this._GET_ObjectID_Current( beforeType), "Current " + beforeType, "value.Current." + beforeType)
+        }
+        else {
+          if (await this.getObjectAsync(oS.alias + await this._GET_ObjectID_Current(beforeType)) != null)
+          {
+            await this._SET_ExtendObject(oS, await this._GET_ObjectID_Current( beforeType), "Disabled", "value.Current." + beforeType)
+          }
+       
+        }
+              //Before erzeugen bzw leeren
+        await this._generate_PreviousObjects(oS, beforeType)
 
-      let i
-      for (i = 0; i < this.config.generateDPDays; i++) {
-        let dat = new Date()
-        dat.setDate(dat.getDate() + i)
-        await this._Generate_HistoryDatapoints(oS, dat)
-      }
+      })
+  
 
-      //Before erzeugen bzw leeren
-      await this._generate_BeforeObject(oS, "Day", oS.before_days)
-      await this._generate_BeforeObject(oS, "Week", oS.before_weeks)
-      await this._generate_BeforeObject(oS, "Month", oS.before_months)
-      await this._generate_BeforeObject(oS, "Year", oS.before_years)
+
 
 
     }
@@ -470,39 +506,18 @@ class PeriodCounter extends utils.Adapter {
   /**
 * create for every enabled object the needed stats and set it to initial it
 * @param {ObjectSettings} oS
-* @param {string} beforeType
-* @param {number} beforeCount
 */
-  async _generate_BeforeObject(oS, beforeType, beforeCount) {
-    let iBefore
+  async _generate_PreviousObjects(oS, beforeType) {
+    let beforeCount = oS["before_" + beforeType + "s"]
+    let iBefore;
     for (iBefore = 1; iBefore <= beforeCount; iBefore++) {
-      await this._SET_CreateChannel(oS.alias + "." + beforeType + "sBefore", beforeType + "s Before", true)
-      let theDateInfo = ""
-      let theDate = new Date()
-      if (beforeType == "Day") {
-        theDate.setDate(theDate.getDate() - iBefore)
-        theDateInfo = theDate.toDateString()
-      } else if (beforeType == "Week") {
-        theDate.setDate(theDate.getDate() - 7 * iBefore)
-        theDateInfo = "KW_" + this._Get_KW(theDate)
+      if (!await this.getObjectAsync(oS.alias + await this._GET_ObjectID_previous(oS, beforeType, iBefore ))) {
+        await this._SET_ExtendObject(oS, await this._GET_ObjectID_previous(oS, beforeType, iBefore ), "no data yet", "value.history")
       }
-      else if (beforeType == "Month") {
-        theDate.setMonth(theDate.getMonth() - iBefore)
-        let MonthString = theDate.toLocaleString('en-us', { month: 'long' })
-        theDateInfo = this.pad(theDate.getMonth() + 1, 2) + "_" + MonthString
-      }
-      else if (beforeType == "Year") {
-        theDate.setFullYear(theDate.getFullYear() - iBefore)
-
-        theDateInfo = theDate.getFullYear().toString()
-      }
-
-      await this._SET_ExtendObject(oS.alias + "." + beforeType + "sBefore.Before_" + this.pad(iBefore, 2), "actually " + theDateInfo, 'value.history', oS.output_unit)
     }
     while (true) {
-      if (await this.getObjectAsync(oS.alias + "." + beforeType + "sBefore.Before_" + this.pad(iBefore, 2))) {
-        await this._SET_ExtendObject(oS.alias + "." + beforeType + "sBefore.Before_" + this.pad(iBefore, 2), "actually disabled", 'value.history', oS.output_unit)
-        await this.setStateAsync(oS.alias + "." + beforeType + "sBefore.Before_" + this.pad(iBefore, 2), null, true)
+      if (await this.getObjectAsync(oS.alias + await this._GET_ObjectID_previous(oS, beforeType, iBefore))) {
+        await this._SET_ExtendObject(oS, await this._GET_ObjectID_previous(oS, beforeType, iBefore ), "Disabled", "value.history")
         iBefore++
       }
       else { break }
@@ -510,111 +525,181 @@ class PeriodCounter extends utils.Adapter {
     }
   }
 
-  /**
-  * create the HistoryDatapoints for this Day
-  * @param {ObjectSettings} oS
-  * @param {Date} date
-  */
-  async _Generate_HistoryDatapoints(oS, date) {
-    if (oS.detailed_days) {
-      let ID_Year = oS.alias + "." + date.getFullYear()
-      await this._SET_CreateChannel(ID_Year, String(date.getFullYear()), true)
-      let ID_Days = ID_Year + ".Days"
-      await this._SET_CreateChannel(ID_Days, "Days", true)
-      let MonthString = date.toLocaleString('en-us', { month: 'long' })
-      let ID_Months = ID_Days + "." + this.pad(date.getMonth() + 1, 2) + "_" + MonthString
-      await this._SET_CreateChannel(ID_Months, this.pad(date.getMonth() + 1, 2) + "_" + MonthString, true)
-      let ID_Day = ID_Months + "." + this.pad(date.getDate(), 2)
-      await this._SET_CreateObject(ID_Day, this.pad(date.getDate(), 2) + ". " + MonthString, "value.history", oS.output_unit)
-    }
-    if (oS.detailed_months) {
-      let ID_Year = oS.alias + "." + date.getFullYear()
-      await this._SET_CreateChannel(ID_Year, String(date.getFullYear()), true)
-      let ID_Months = ID_Year + ".Months"
-      await this._SET_CreateChannel(ID_Months, "Months", true)
-      let MonthString = date.toLocaleString('en-us', { month: 'long' })
-      let ID_Month = ID_Months + "." + this.pad(date.getMonth() + 1, 2) + "_" + MonthString
-      await this._SET_CreateObject(ID_Month, this.pad(date.getMonth() + 1, 2) + "_ " + MonthString, 'value.history', oS.output_unit)
-    }
-    if (oS.detailed_weeks) {
-      let ID_Year = oS.alias + "." + date.getFullYear()
-      await this._SET_CreateChannel(ID_Year, String(date.getFullYear()), true)
-      let ID_Weeks = ID_Year + ".Weeks"
-      await this._SET_CreateChannel(ID_Weeks, "Weeks", true)
-      let ID_Months = ID_Weeks + ".KW" + this.pad(this._Get_KW(date), 2)
-      await this._SET_CreateObject(ID_Months, "KW" + this.pad(this._Get_KW(date), 2), "value.history", oS.output_unit)
-    }
-    if (oS.detailed_years) {
-      let ID_Year = oS.alias + "." + date.getFullYear()
-      await this._SET_CreateChannel(ID_Year, String(date.getFullYear()), true)
-      let ID_YearV = ID_Year + ".Value"
-      await this._SET_CreateObject(ID_YearV, date.getFullYear() + " Value", 'value.history', oS.output_unit)
-    }
-  }
+
 
 
   /**
 * Extends an existing object or create it
+* @param {ObjectSettings} oS
 * @param {string} id
 * @param {string} name
 * @param {string} role
-* @param {string} unit
 */
-  async _SET_ExtendObject(id, name, role, unit) {
-    await this.extendObjectAsync(id, {
-      type: 'state',
-      common: {
-        name: name,
-        role: role,
-        type: 'number',
-        desc: `Created by ${this.namespace}`,
-        unit: unit,
-        read: true,
-        write: false,
-      },
-      native: {}
-    })
-  }
-  /**
-   * Is called if a subscribed object changes
-    * @param {string} id
-  * @param {string} name
-  *  * @param {boolean} history
-   */
-  async _SET_CreateChannel(id, name, history) {
-    await this.setObjectNotExists(id, {
-      type: 'channel',
-      common: {
-        name: name,
-        role: history ? "value.history" : "value.current",
-        desc: `Created by ${this.namespace}`,
-      },
-      native: {}
-    })
+  async _SET_ExtendObject(oS, id, name, role) {
+    if (!name.includes(" (" + oS.alias + ")")){
+      name += " (" + oS.alias + ")"
+    }
+
+    let theObject =  await this.getObjectAsync(oS.alias + id)
+
+    if (theObject == null || theObject == undefined || theObject.common.name != name || theObject.common.role != role){
+      await this.extendObjectAsync(oS.alias + id, {
+        type: 'state',
+        common: {
+          name: name ,
+          role: role,
+          type: 'number',
+          desc: `Created by ${this.namespace}`,
+          unit: oS.output_unit,
+          read: true,
+          write: false,
+        },
+        native: {}
+      })
+    }
+
+
 
   }
   /**
-* Create new Object in self tree
-* @param {string} id
-* @param {string} name
-* @param {string} role
-* @param {string} unit
-*/
-  async _SET_CreateObject(id, name, role, unit) {
-    await this.setObjectNotExistsAsync(id, {
-      type: 'state',
-      common: {
-        name: name,
-        role: role,
-        type: 'number',
-        desc: `Created by ${this.namespace}`,
-        unit: unit,
-        read: true,
-        write: false,
-      },
-      native: {}
-    })
+   * Is called if a subscribed object changes
+  * @param {ObjectSettings} oS
+  * @param {string} id
+  * @param {string} name
+   */
+  async _SET_ExtendChannel(oS, id, name) {
+
+    let theObject =  await this.getObjectAsync(oS.alias + id)
+    if (theObject == null || theObject == undefined || theObject.common.name != name + " (" + oS.alias + ")" || theObject.type != "channel" ){
+      await this.extendObjectAsync(oS.alias + id, {
+        type: 'channel',
+        common: {
+          name: name + " (" + oS.alias + ")",
+          desc: `Created by ${this.namespace}`,
+        },
+        native: {}
+      })
   }
+
+  }
+
+    /**
+* extends the Object with customData in the correct namespace
+* @param {ObjectSettings} oS
+* @param {string} Timeperiod
+* @param {number} beforeZähler
+*/
+async _GET_ObjectID_previous(oS, Timeperiod, beforeZähler) {
+  if (oS['before_' + Timeperiod + 's'] > 0)
+    await this._SET_ExtendChannel(oS, "." + TimePeriodsZahl[Timeperiod] + "_previous" + Timeperiod + "s", Timeperiod + "s Before")
+  
+
+  let theID =  "." + TimePeriodsZahl[Timeperiod] + "_previous" + Timeperiod + "s.Before_" + this.pad(beforeZähler, 2) + "_" + Timeperiod
+  return theID
+
+}
+
+    /**
+* extends the Object with customData in the correct namespace
+* @param {ObjectSettings} oS
+* @param {string} Timeperiod
+* @param {Date} theDate
+
+*/
+async _GET_ObjectID_DateInfoName_previous(oS, Timeperiod, theDate, beforeZähler) {
+
+  let theDateInfo = ""
+  if (Timeperiod == TimePeriods.Minute) {
+    theDate.setMinutes(theDate.getMinutes() - beforeZähler)
+    theDateInfo = theDate.toLocaleTimeString()
+  } else if (Timeperiod == TimePeriods.Hour) {
+    theDate.setHours(theDate.getHours() - beforeZähler)
+    theDateInfo = theDate.toLocaleTimeString()
+
+  } else if (Timeperiod == TimePeriods.Day) {
+    theDate.setDate(theDate.getDate() - beforeZähler)
+    theDateInfo = theDate.toDateString()
+  } else if (Timeperiod == TimePeriods.Week) {
+    theDate.setDate(theDate.getDate() - 7 * beforeZähler)
+    theDateInfo = "KW_" + this._Get_KW(theDate)
+  }
+  else if (Timeperiod == TimePeriods.Month) {
+    theDate.setMonth(theDate.getMonth() - beforeZähler)
+    let MonthString = theDate.toLocaleString('en-us', { month: 'long' })
+    theDateInfo = this.pad(theDate.getMonth() + 1, 2) + "_" + MonthString
+  }
+  else if (Timeperiod == TimePeriods.Quarter) {
+    theDate.setMonth(theDate.getMonth() - (beforeZähler * 3))
+
+    theDateInfo = "quarter " + this._Get_Quarter(theDate)
+  }
+
+  else if (Timeperiod == TimePeriods.Year) {
+    theDate.setFullYear(theDate.getFullYear() - beforeZähler)
+
+    theDateInfo = theDate.getFullYear().toString()
+  }
+  return "Data from " + theDateInfo;
+}
+
+
+
+
+    /**
+* Creates the needed TreeStructure and returns the Id after alias-name
+* @param {ObjectSettings} oS
+* @param {string} Timeperiod
+* @param {Date} date
+*/
+async _GET_ObjectID_Detailed(oS, Timeperiod, date) {
+
+  let IZusatz = "." + date.getFullYear()
+  await this._SET_ExtendChannel(oS, IZusatz, String(date.getFullYear()))
+
+  if (Timeperiod == TimePeriods.Year ) {
+    IZusatz = IZusatz + "."  + TimePeriodsZahl.Year + "_Year_" + date.getFullYear()
+    await this._SET_ExtendObject(oS, IZusatz, date.getFullYear() + " Value", 'value.history')
+    return IZusatz
+  }
+
+  IZusatz = IZusatz + "." + TimePeriodsZahl[Timeperiod] + "_" + Timeperiod + "s"
+  await this._SET_ExtendChannel(oS, IZusatz, Timeperiod + "s")
+  
+  if ( Timeperiod == TimePeriods.Day) {
+    let MonthString = date.toLocaleString('en-us', { month: 'long' })
+    IZusatz = IZusatz + "." + this.pad(date.getMonth() + 1, 2) + "_" + MonthString
+    await this._SET_ExtendChannel(oS, IZusatz, this.pad(date.getMonth() + 1, 2) + "_" + MonthString)
+    IZusatz = IZusatz + "." + this.pad(date.getDate(), 2)
+    await this._SET_ExtendObject(oS, IZusatz, this.pad(date.getDate(), 2) + ". " + MonthString, "value.history")
+  }
+  if (Timeperiod == TimePeriods.Month) {
+    let MonthString = date.toLocaleString('en-us', { month: 'long' })
+    IZusatz = IZusatz + "." + this.pad(date.getMonth() + 1, 2) + "_" + MonthString
+    await this._SET_ExtendObject(oS, IZusatz, this.pad(date.getMonth() + 1, 2) + "_" + MonthString, 'value.history')
+  }
+  if (Timeperiod == TimePeriods.Week) {
+    IZusatz = IZusatz + ".KW" + this.pad(this._Get_KW(date), 2)
+    await this._SET_ExtendObject(oS, IZusatz, "KW" + this.pad(this._Get_KW(date), 2), "value.history")
+  }
+  if (Timeperiod == TimePeriods.Quarter ) {
+    IZusatz = IZusatz + ".quater_" + this._Get_Quarter(date)
+    await this._SET_ExtendObject(oS, IZusatz,'quater_' + this._Get_Quarter(date), "value.history")
+  }
+  return IZusatz
+
+}
+
+    /**
+* returns the current DP
+* @param {string} TimePeriod
+*/
+async _GET_ObjectID_Current(TimePeriod) {
+  return  "." + TimePeriodsZahl[TimePeriod] + "_current" + TimePeriod
+
+}
+
+
+
 
   /**
 * extends the Object with customData in the correct namespace
@@ -623,24 +708,47 @@ class PeriodCounter extends utils.Adapter {
 * @param {object} value
 */
   async _SET_startValue(oS, type, value) {
-    await this.setStateAsync(oS.alias + "._startValues.start_" + type, value, true)
+    await this.setStateAsync(oS.alias + "._startValues.start_" + TimePeriodsZahl[type] + "_" + type, this._roundto( value), true)
   }
   /**
 * extends the Object with customData in the correct namespace
 * @param {ObjectSettings} oS
 * @param {string} type
-* @param {object} value
+* @param {object} currentValue
 */
-  async _GET_ReadOutStartValueAndCreateIfNotExists(oS, type, value) {
-    await this._SET_CreateObject(oS.alias + "._startValues.start_" + type, "start_" + type, "", "")
+  async _Get_StartValue(oS, type, currentValue) {
+    
+    await this._SET_ExtendObject(oS, "._startValues.start_" + TimePeriodsZahl[type] + "_" + type, "start_" + type, "")
 
-    let state = await this.getStateAsync(oS.alias + "._startValues.start_" + type)
+    let state = await this.getStateAsync(oS.alias + "._startValues.start_" + TimePeriodsZahl[type] + "_" + type)
     if (!state || state.val == null || state.val == undefined) {
-      await this.setStateAsync(oS.alias + "._startValues.start_" + type, value, true)
-      state = await this.getStateAsync(oS.alias + "._startValues.start_" + type)
+      await this.setStateAsync(oS.alias + "._startValues.start_" + TimePeriodsZahl[type] + "_" + type, currentValue, true)
+      state = await this.getStateAsync(oS.alias + "._startValues.start_" + TimePeriodsZahl[type] + "_" + type)
     }
     if (state) {
-      return state.val
+      return Number(state.val)
+
+    }
+    else {
+      return 0
+    }
+  }
+
+
+  /**
+   * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
+   * Using this method requires "common.message" property to be set to true in io-package.json
+   * @param {ioBroker.Message} obj
+   */
+  onMessage(obj) {
+    if (typeof obj === 'object' && obj.message) {
+      if (obj.command === 'send') {
+        // e.g. send email or pushover or whatever
+        this.log.info('send command');
+
+        // Send response in callback if required
+        if (obj.callback) this.sendTo(obj.from, obj.command, 'Message received', obj.callback);
+      }
     }
   }
 }
