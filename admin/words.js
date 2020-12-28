@@ -16,7 +16,7 @@ systemDictionary = {
 	},
 	"generateDPDays": {
 		"en": "Generate Datapoints for x days in future",
-		"de": "Generate Datapoints for x days in future",
+		"de": "Generate Datapoints for x days in future"
 	},
 	"option2": {
 		"en": "option2",
