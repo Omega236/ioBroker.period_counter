@@ -1,75 +1,104 @@
+
+
 class ObjectSettings {
+
+
   /**
   * Generate new ObjectSettingsClass
   * @param {string} namespace
   * @param {ioBroker.Object } iobrokerObject
-  */
+ */
   constructor(iobrokerObject, namespace) {
-    let myCustomSettings;
-    if (iobrokerObject.common.custom) {
-      myCustomSettings = iobrokerObject.common.custom[namespace]
-    }
-    this.id = iobrokerObject._id
+
     this.iobrokerObject = iobrokerObject
+    this.namespace = namespace
 
-    this.alias = myCustomSettings.alias
+    
+  }
 
-    if (this.alias == undefined || this.alias === "") {
-      this.alias = iobrokerObject._id.replace(/[.]/g, '_')
+  lastGoodValue = 0
+  FirstWrongValue = Number.NaN
+  lastWrongValue = Number.NaN
+  counterResetDetetion_CurrentCountAfterReset = 0
+  initialFinished = false
+
+  iobrokerObject
+
+  namespace
+
+
+  get myCustomSettings() {
+    if (this.iobrokerObject.common.custom) {
+      return this.iobrokerObject.common.custom[this.namespace]
     }
-    this.output_unit = myCustomSettings.output_unit
-    if (this.output_unit === null || this.output_unit === "" || this.output_unit == undefined) {
-      this.output_unit = iobrokerObject.common.unit
+    return null
+  }
+
+  get alias() {
+    let ret = this.myCustomSettings.alias
+
+    if (ret == null || ret == undefined || ret === "") {
+      ret = this.iobrokerObject._id.replace(/[.]/g, '_')
     }
-    this.output_multiplier = myCustomSettings.output_multiplier,
-      this.detailed_Minutes = false,
-      this.detailed_Hours = false,
-      this.detailed_Days = myCustomSettings.detailed_days,
-      this.detailed_Weeks = myCustomSettings.detailed_weeks,
-      this.detailed_Months = myCustomSettings.detailed_months,
-      this.detailed_Quarters = myCustomSettings.detailed_quarters,
-      this.detailed_Years = myCustomSettings.detailed_years,
-      this.before_Minutes = myCustomSettings.before_minutes,
-      this.before_Hours = myCustomSettings.before_hours,
-      this.before_Days = myCustomSettings.before_days,
-      this.before_Weeks = myCustomSettings.before_weeks,
-      this.before_Months = myCustomSettings.before_months,
-      this.before_Quarters = myCustomSettings.before_quarters,
-      this.before_Years = myCustomSettings.before_years,
+    return String(ret)
+  }
+
+  get id() { return this.iobrokerObject._id }
+
+  get counterResetDetetion_CountAfterReset() { return Number(this.myCustomSettings.counterResetDetetion_CountAfterReset) }
+
+  get output_unit() {
+    let ret = this.myCustomSettings.output_unit
+    if (ret === null || ret === "" || ret == undefined) {
+      ret = this.iobrokerObject.common.unit
+      return ret
+    }
+  }
+  get output_multiplier() { return Number(this.myCustomSettings.output_multiplier) }
+
+  get counterResetDetection() { return (Boolean)(this.myCustomSettings.counterResetDetection) }
+
+
+
+
+  /**
+* Update the iobroker Object
+* @param {ioBroker.Object } iobrokerObject
+*/
+  updateSettings(iobrokerObject) {
+    let OldAlias = this.alias
+    this.iobrokerObject = iobrokerObject
+    if (OldAlias != this.alias)
+    {
       this.lastGoodValue = 0
-    this.FirstWrongValue = Number.NaN
-    this.lastWrongValue = NaN
+      this.FirstWrongValue = Number.NaN
+      this.lastWrongValue = Number.NaN
+      this.counterResetDetetion_CurrentCountAfterReset = 0
+      this.initialFinished = false
+    
+    }
+    this.initialFinished = false
+  }
 
-
-
-    this.counterResetDetection = myCustomSettings.counterResetDetection
-
-    //this.counterResetDetetion0Ignore = abc.counterResetDetetion0Ignore
-    this.counterResetDetetion_CountAfterReset = myCustomSettings.counterResetDetetion_CountAfterReset
-    this.counterResetDetetion_CurrentCountAfterReset = 0
-
-
-
-
+  /**
+* returns the 
+* @param {string} TimePeriod
+* @returns {boolean}
+*/
+  detailed(TimePeriod) {
+    if (TimePeriod == "Minute" || TimePeriod == "Hour")
+      return false
+    return this.myCustomSettings["detailed_" + TimePeriod.toLowerCase() + "s"]
 
   }
 
-    /**
-* returns the 
-* @param {string} beforetype
-* @returns {boolean}
-*/
-detailed(beforetype) {
-  return this["detailed_" + beforetype + "s"]
- }
-
   /**
 * returns the Count of Current/Previous Datapoints
-* @param {string} beforetype
+* @param {string} TimePeriod
 * @returns {number}
 */
-  beforeCount(beforetype) {
-   return this["before_" + beforetype + "s"]
+  beforeCount(TimePeriod) {
+    return this.myCustomSettings["before_" + TimePeriod.toLowerCase() + "s"]
   }
 }
 module.exports = ObjectSettings
