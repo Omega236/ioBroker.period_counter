@@ -1,7 +1,13 @@
+"use strict";
 
 
 class ObjectSettings {
 
+  lastGoodValue = 0;
+  FirstWrongValue = Number.NaN;
+  lastWrongValue = Number.NaN;
+  counterResetDetetion_CurrentCountAfterReset = 0;
+  initialFinished = false;
 
   /**
   * Generate new ObjectSettingsClass
@@ -16,15 +22,7 @@ class ObjectSettings {
     
   }
 
-  lastGoodValue = 0
-  FirstWrongValue = Number.NaN
-  lastWrongValue = Number.NaN
-  counterResetDetetion_CurrentCountAfterReset = 0
-  initialFinished = false
-
-  iobrokerObject
-
-  namespace
+ 
 
 
   get myCustomSettings() {
